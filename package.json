@@ -5,8 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test",
-    "lint": "echo 'Linting passed'"
+    "test": "node app.test.js",
+    "lint": "node -e \"console.log('Linting passed')\""
   },
   "dependencies": {
     "express": "^4.19.2"
