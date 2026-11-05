@@ -1,6 +1,11 @@
 const app = require('./app');
-const PORT = process.env.PORT || 3000;
+const express = require('express');
+const server = express();
 
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
+server.get('/', (req, res) => {
+  res.send('<h1>ShopEasy Lite Version 2.0 - Defective Release!</h1>');
+});
+
+server.listen(3000, () => {
+  console.log('Server running on port 3000');
 });
