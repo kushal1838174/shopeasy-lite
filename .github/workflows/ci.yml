@@ -1,42 +1,40 @@
-name: CI Pipeline
+name: CI & Docker GHCR Delivery
 
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  build-and-test:
+  publish-image:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [18, 20]
+    permissions:
+      contents: read
+      packages: write
 
     steps:
-      - name: Checkout Source Code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install Dependencies
-        run: npm install
+      - name: Convert Repository Name to Lowercase
+        id: repo_name
+        run: echo "REPO_LOWER=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
-      - name: Run Linter
-        run: npm run lint
-
-      - name: Run Automated Tests
-        run: npm test
-
-      - name: Package Application
-        run: tar -czf app-build-node-${{ matrix.node-version }}.tar.gz --exclude='.git' --exclude='.github' .
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+      - name: Build and Push Docker Image (v1.0.0)
+        uses: docker/build-push-action@v5
         with:
-          name: app-package-node-${{ matrix.node-version }}
-          path: app-build-node-${{ matrix.node-version }}.tar.gz
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ env.REPO_LOWER }}:v1.0.0
+            ghcr.io/${{ env.REPO_LOWER }}:latest
